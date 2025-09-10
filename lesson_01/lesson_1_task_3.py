@@ -1,4 +1,4 @@
-first_name = "Sergey"
-last_name = "Pronin"
-name = input("Как вас зовут? ")
-print(f"Вас зовут: {last_name} {first_name}") 
+first_name = input("Введите ваше имя: ")
+last_name = input("Введите вашу фамилию: ")
+
+print("Вас зовут: {} {}".format(last_name, first_name))
