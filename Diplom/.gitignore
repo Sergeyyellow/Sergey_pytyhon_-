@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+allure-results/
+allure-report/
+.pytest_cache/
+.coverage
+htmlcov/
+*.png
+*.jpg
+
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
