@@ -65,6 +65,48 @@ class TestUI:
             )
             return False
     
+    @allure.title("Тест загрузки главной страницы")
+    @allure.description("Проверка что главная страница загружается корректно")
+    @pytest.mark.ui
+    @pytest.mark.smoke
+    def test_home_page_load(self, browser):
+        """Проверка загрузки главной страницы"""
+        # Получаем base_url из конфигурации браузера
+        base_url = browser.test_config['base_url']
+        
+        with allure.step(f"Открыть главную страницу {base_url}"):
+            browser.get(base_url)
+            
+            # Ждем загрузки страницы
+            WebDriverWait(browser, 30).until(
+                lambda driver: driver.execute_script('return document.readyState') == 'complete'
+            )
+            
+            # Даем время на загрузку динамического контента
+            time.sleep(2)
+        
+        with allure.step("Проверить заголовок страницы"):
+            title = browser.title
+            allure.attach(
+                f"Заголовок: {title}\nБраузер: {browser.test_config['browser']}\nHeadless: {browser.test_config['headless']}",
+                name="page_info",
+                attachment_type=allure.attachment_type.TEXT
+            )
+            assert title, "Заголовок страницы не должен быть пустым"
+            
+            # Для отладки сохраняем скриншот
+            browser.save_screenshot("home_page.png")
+            allure.attach.file(
+                "home_page.png",
+                name="home_page_screenshot",
+                attachment_type=allure.attachment_type.PNG
+            )
+        
+        with allure.step("Проверить URL"):
+            current_url = browser.current_url
+            allure.attach(current_url, name="current_url", attachment_type=allure.attachment_type.TEXT)
+            assert base_url in current_url, f"URL должен содержать {base_url}"
+    
     def _find_element_with_retry(self, browser, by, selector, timeout=10, retries=3):
         """Поиск элемента с повторными попытками"""
         for attempt in range(retries):

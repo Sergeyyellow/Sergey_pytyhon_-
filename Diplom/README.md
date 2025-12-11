@@ -51,3 +51,6 @@ pytest -m ui -v
 
 # Запуск всех тестов
 pytest
+
+# Запуск с другим размером окна
+pytest -m ui -v --window-size=1366,768

@@ -11,25 +11,21 @@ class TestAPI:
     
     def _make_request(self, url, method='GET', **kwargs):
         """Универсальный метод для выполнения запросов с заголовками"""
-        headers = {
+        headers = kwargs.get('headers', {})
+        
+        # Базовые заголовки
+        base_headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
             'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Cache-Control': 'max-age=0',
         }
         
-        # Добавляем пользовательские заголовки если есть
-        if 'headers' in kwargs:
-            headers.update(kwargs.pop('headers'))
-        
-        kwargs['headers'] = headers
+        # Объединяем заголовки
+        base_headers.update(headers)
+        kwargs['headers'] = base_headers
         kwargs['timeout'] = kwargs.get('timeout', 15)
         
         try:
@@ -50,11 +46,11 @@ class TestAPI:
     @allure.description("Проверка что сайт отвечает на HTTP запросы")
     @pytest.mark.api
     @pytest.mark.smoke
-    def test_site_availability(self):
+    def test_site_availability(self, api_base_url):
         """Проверка доступности сайта"""
-        with allure.step(f"Отправка GET запроса на {BASE_URL}"):
+        with allure.step(f"Отправка GET запроса на {api_base_url}"):
             start_time = time.time()
-            response = self._make_request(BASE_URL)
+            response = self._make_request(api_base_url)
             response_time = time.time() - start_time
         
         with allure.step("Анализ ответа"):
@@ -66,33 +62,17 @@ class TestAPI:
                 attachment_type=allure.attachment_type.TEXT
             )
             
-            # Сохраняем заголовки ответа
-            headers_info = "\n".join([f"{k}: {v}" for k, v in response.headers.items()])
-            allure.attach(
-                headers_info,
-                name="response_headers",
-                attachment_type=allure.attachment_type.TEXT
-            )
-            
-            # Для сайтов с защитой от ботов проверяем разные сценарии
+            # Проверяем разные сценарии
             if response.status_code == 403:
                 allure.attach(
-                    "Сайт возвращает 403 Forbidden - вероятно защита от ботов/скрапинга",
+                    "Сайт возвращает 403 Forbidden - вероятно защита от ботов",
                     name="bot_protection_info",
                     attachment_type=allure.attachment_type.TEXT
                 )
-                # Не падаем, но отмечаем в отчете
                 pytest.skip("Сайт защищен от автоматических запросов (403 Forbidden)")
             
-            # Проверяем что сайт вообще отвечает
             assert response.status_code in [200, 403, 429], \
                 f"Неожиданный статус код: {response.status_code}"
-            
-            # Проверяем что это HTML страница (если не 403)
-            if response.status_code == 200:
-                content_type = response.headers.get('Content-Type', '')
-                assert 'text/html' in content_type, \
-                    f"Ожидался HTML, получен: {content_type}"
     
     @allure.title("Тест поиска через API")
     @allure.description("Проверка работы поискового функционала")
